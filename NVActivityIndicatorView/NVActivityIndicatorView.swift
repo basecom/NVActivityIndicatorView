@@ -239,7 +239,7 @@ public enum NVActivityIndicatorType: Int {
     case audioEqualizer
     
     static let allTypes = (blank.rawValue ... audioEqualizer.rawValue).map{ NVActivityIndicatorType(rawValue: $0)! }
-    
+
     func animation() -> NVActivityIndicatorAnimationDelegate {
         switch self {
         case .blank:
@@ -311,46 +311,49 @@ public enum NVActivityIndicatorType: Int {
 }
 
 /// Activity indicator view with nice animations
-public class NVActivityIndicatorView: UIView {
+open class NVActivityIndicatorView: UIView {
     /// Default type. Default value is .BallSpinFadeLoader.
-    public static var DEFAULT_TYPE: NVActivityIndicatorType = .ballSpinFadeLoader
+    open static var DEFAULT_TYPE: NVActivityIndicatorType = .ballSpinFadeLoader
     
     /// Default color. Default value is UIColor.whiteColor().
-    public static var DEFAULT_COLOR = UIColor.white
+    open static var DEFAULT_COLOR = UIColor.white
     
     /// Default padding. Default value is 0.
-    public static var DEFAULT_PADDING: CGFloat = 0
+    open static var DEFAULT_PADDING: CGFloat = 0
     
     /// Default size of activity indicator view in UI blocker. Default value is 60x60.
-    public static var DEFAULT_BLOCKER_SIZE = CGSize(width: 60, height: 60)
+    open static var DEFAULT_BLOCKER_SIZE = CGSize(width: 60, height: 60)
     
     /// Default display time threshold to actually display UI blocker. Default value is 0 ms.
-    public static var DEFAULT_BLOCKER_DISPLAY_TIME_THRESHOLD = 0
+    open static var DEFAULT_BLOCKER_DISPLAY_TIME_THRESHOLD = 0
     
     /// Default minimum display time of UI blocker. Default value is 0 ms.
-    public static var DEFAULT_BLOCKER_MINIMUM_DISPLAY_TIME = 0
-    
+    open static var DEFAULT_BLOCKER_MINIMUM_DISPLAY_TIME = 0
+
     /// Animation type.
-    public var type: NVActivityIndicatorType = NVActivityIndicatorView.DEFAULT_TYPE
-    
+    open var type: NVActivityIndicatorType = NVActivityIndicatorView.DEFAULT_TYPE
+
     @available(*, unavailable, message: "This property is reserved for Interface Builder. Use 'type' instead.")
     @IBInspectable var typeName: String {
         get {
             return self.getTypeName()
         }
         set {
-            self._setTypeName(newValue)
+            self.setTypeName_(newValue)
         }
     }
-    
+
     /// Color of activity indicator view.
-    @IBInspectable public var color: UIColor = NVActivityIndicatorView.DEFAULT_COLOR
-    
+    @IBInspectable open var color: UIColor = NVActivityIndicatorView.DEFAULT_COLOR
+
     /// Padding of activity indicator view.
-    @IBInspectable public var padding: CGFloat = NVActivityIndicatorView.DEFAULT_PADDING
-    
+    @IBInspectable open var padding: CGFloat = NVActivityIndicatorView.DEFAULT_PADDING
+
     /// Current status of animation, read-only.
-    public private(set) var animating: Bool = false
+    open var animating: Bool {
+        return _animating
+    }
+    fileprivate var _animating: Bool = false
     
     /**
      Returns an object initialized from data in a given unarchiver.
@@ -396,16 +399,16 @@ public class NVActivityIndicatorView: UIView {
      
      - returns: A size indicating the natural size for the receiving view based on its intrinsic properties.
      */
-    public override var intrinsicContentSize : CGSize {
+    open override var intrinsicContentSize : CGSize {
         return CGSize(width: self.bounds.width, height: self.bounds.height)
     }
     
     /**
      Start animating.
      */
-    public func startAnimating() {
+    open func startAnimating() {
         self.isHidden = false
-        self.animating = true
+        self._animating = true
         self.layer.speed = 1
         setUpAnimation()
     }
@@ -413,15 +416,15 @@ public class NVActivityIndicatorView: UIView {
     /**
      Stop animating.
      */
-    public func stopAnimating() {
+    open func stopAnimating() {
         self.isHidden = true
-        self.animating = false
+        self._animating = false
         self.layer.sublayers?.removeAll()
     }
     
     // MARK: Internal
     
-    func _setTypeName(_ typeName: String) {
+    func setTypeName_(_ typeName: String) {
         for item in NVActivityIndicatorType.allTypes {
             if String(describing: item).caseInsensitiveCompare(typeName) == ComparisonResult.orderedSame {
                 self.type = item
@@ -436,13 +439,35 @@ public class NVActivityIndicatorView: UIView {
     
     // MARK: Privates
     
-    private func setUpAnimation() {
+    fileprivate func setUpAnimation() {
         let animation: NVActivityIndicatorAnimationDelegate = self.type.animation()
         var animationRect = UIEdgeInsetsInsetRect(self.frame, UIEdgeInsetsMake(padding, padding, padding, padding))
         let minEdge = min(animationRect.width, animationRect.height)
         
         self.layer.sublayers = nil
         animationRect.size = CGSize(width: minEdge, height: minEdge)
-        animation.setUpAnimation(in: self.layer, size: animationRect.size, color: self.color)
+        animation.setUpAnimationInLayer(self.layer, size: animationRect.size, color: self.color)
+    }
+    
+    // MARK: Deprecated
+    
+    /// Specify whether activity indicator view should hide once stopped.
+    @available(*, deprecated: 2.11)
+    @IBInspectable open var hidesWhenStopped: Bool = true
+    
+    /**
+     Start animating.
+     */
+    @available(*, deprecated: 2.11, renamed: "startAnimating()")
+    open func startAnimation() {
+        self.startAnimating()
+    }
+    
+    /**
+     Stop animating.
+     */
+    @available(*, deprecated: 2.11, renamed: "stopAnimating()")
+    open func stopAnimation() {
+        self.stopAnimation()
     }
 }
